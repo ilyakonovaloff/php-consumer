@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  php:
+    build: docker/php
+    volumes:
+      - .:/app
+    environment:
+      - REDIS_HOST=redis
+      - SINGLE_LOG_FILE=1
+      - DEBUG_MODE=0
+      - WRITE_TO_FILE=1
+      - FAIR_CONSUMING=0
+      - CHUNK_SIZE=100
+      - EMULATE_EVENT_PROCESS=0
+      - USERS_COUNT=1000
+      - EVENTS_PER_USER_COUNT=100
+    depends_on:
+      - redis
+    entrypoint: sh -c "composer install --ignore-platform-reqs --no-dev --optimize-autoloader && tail -f /dev/null"
+    restart: always
+
+  redis:
+    image: redis:alpine
+    restart: always
+    command: [ "redis-server", "--appendonly", "yes" ]
+    volumes:
+      - redis:/data:delegated
+    ports:
+      - "6379:6379"
+
+volumes:
+  redis:
